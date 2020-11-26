@@ -1,20 +1,31 @@
 openapi: 3.0.0
 servers:
-    - url: https://api.goodfood.fr/v1
-      description: Default server
-    - url: https://api.goodfood.fr/sandbox
-      description: Sandbox server
+  - url: https://api.goodfood.fr/v1
+    description: Default server
+  - url: https://api.goodfood.fr/sandbox
+    description: Sandbox server
 info:
   title: GoodFood API
+
   description: |
-    Documentation de l'API de GoodFood
+    # Introduction
+    Cette page est dédiée à la documentation de l'API REST de GoodFood. GoodFood est un réseau
+    de restaurants franchisés qui proposent des prestations de restauration conventionnelle,
+    de la vente à emporter et des prestations de livraison.
+
+    Si vous pensez avoir trouvé un bug au niveau de l'API ou une erreur sur la documentation
+    vous pouvez le reporter sur notre
+    [outil de tracking d'issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
+    ou nous contacter via notre adresse mail [contact@goodfood.fr](mailto:contact@goodfood.fr).
 
     # Authentification
     ...
 
   version: 0.1.0
   contact:
-    email: api@goodfood.fr
+    name: Support technique
+    email: contact@goodfood.fr
+    url: http://goodfood.fr/contact
 tags:
   - name: Général
     description: Informations sur l'API et authentification
@@ -25,7 +36,7 @@ tags:
 paths:
   /users:
     get:
-      tags: ["Utilisateurs"]
+      tags: [ "Utilisateurs" ]
       summary: Liste des utilisateurs
       description: Retourne uniquement les 500 premiers utilisateurs si aucun param
       parameters:
@@ -54,7 +65,7 @@ paths:
               schema:
                 type: array
                 items:
-                - $ref: '#/components/schemas/Utilisateur'
+                  - $ref: '#/components/schemas/Utilisateur'
         404:
           description: Aucun utilisateur dans cet intervalle
 components:
