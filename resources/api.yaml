@@ -1,0 +1,110 @@
+openapi: 3.0.0
+servers:
+    - url: https://api.goodfood.fr/v1
+      description: Default server
+    - url: https://api.goodfood.fr/sandbox
+      description: Sandbox server
+info:
+  title: GoodFood API
+  description: |
+    Documentation de l'API de GoodFood
+
+    # Authentification
+    ...
+
+  version: 0.1.0
+  contact:
+    email: api@goodfood.fr
+tags:
+  - name: Général
+    description: Informations sur l'API et authentification
+  - name: Utilisateurs
+    description: Opérations sur les utilisateurs
+  - name: Commandes
+    description: Opérations sur les commandes
+paths:
+  /users:
+    get:
+      tags: ["Utilisateurs"]
+      summary: Liste des utilisateurs
+      description: Retourne uniquement les 500 premiers utilisateurs si aucun param
+      parameters:
+        - name: offset
+          in: query
+          description: Décalage à prendre dans la liste
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          required: false
+        - name: limit
+          in: query
+          description: Nombre d'utilisateurs à envoyer
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+          required: false
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                - $ref: '#/components/schemas/Utilisateur'
+        404:
+          description: Aucun utilisateur dans cet intervalle
+components:
+  schemas:
+    Addresse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique de l'adresse
+        number:
+          type: integer
+          description: Numéro de rue
+          required: true
+        street1:
+          type: string
+          description: Rue (première ligne)
+          required: true
+        street2:
+          type: string
+          description: Rue (seconde ligne)
+        city:
+          type: string
+          description: Identifiant unique de l'utilisateur
+          required: true
+        postcode:
+          type: integer
+          description: Code postal
+          required: true
+
+    Utilisateur:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique de l'utilisateur.
+        email:
+          type: string
+          description: Adresse mail de l'utilisateur
+          required: true
+        firstname:
+          type: string
+          description: Prénom
+          required: true
+        lastname:
+          type: string
+          description: Nom de famille
+          required: true
+        registered:
+          type: string
+          description: Date d'inscription
+        address:
+          $ref: '#/components/schemas/Addresse'
