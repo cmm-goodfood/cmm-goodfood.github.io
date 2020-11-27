@@ -1,12 +1,11 @@
 openapi: 3.0.0
 servers:
-  - url: https://api.goodfood.fr/v1
+  - url: https://api.goodfood.fr/v2
     description: Default server
   - url: https://api.goodfood.fr/sandbox
     description: Sandbox server
 info:
   title: GoodFood API
-
   description: |
     # Introduction
     Cette page est dédiée à la documentation de l'API REST de GoodFood. GoodFood est un réseau
@@ -18,8 +17,31 @@ info:
     [outil de tracking d'issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
     ou nous contacter via notre adresse mail [contact@goodfood.fr](mailto:contact@goodfood.fr).
 
-    # Authentification
+    # Versionnage
+    L'API de GoodFood est versionnée et plusieurs versions peuvent être disponibles. Vous pouvez
+    spécifier quelle version utiliser en l'incluant dans l'URL de la requête de la façon suivante
+    `https://api.goodfood.fr/v{numéro_de_version}`.
+    Si aucun numéro de version n'est spécifié, la version par défaut sera utilisée.
+
+    ## Versions de l'API
+    | Version | Statut     | Défaut |
+    |---------|------------|--------|
+    | v1      | Disponible | Oui    |
+
+    # Rate limiting
     ...
+
+    # Authentification et authorisation
+    Certaines terminaisons de l'API nécessitent d'être authentifié. Pour obtenir un token
+    il est nécessaire de contacter le support technique de GoodFood. Le token généré par le
+    support devra être envoyé avec chaque requête nécessitant une authentification dans le
+    header `Authorization` en type `Bearer`.
+
+    Si une terminaison nécessite d'être authentifié mais aucun token n'est fournit ou le token
+    est invalide, une réponse <span class="client-error">400 Unauthorized</span> sera envoyée.
+    Dans le cas où la terminaison nécessite un rôle particulier que l'utilisateur actuel ne
+    possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
+    ---
 
   version: 0.1.0
   contact:
@@ -34,6 +56,81 @@ tags:
   - name: Commandes
     description: Opérations sur les commandes
 paths:
+  /version:
+    get:
+      tags: [ "Général" ]
+      summary: Version de l'API
+      description: |
+        Récupère les informations sur la version de l'API en précisant la version par défaut, la version
+        utilisée et le statut de toutes les versions disponibles. Le statut d'une version peut avoir l'une
+        des valeurs suivantes : `available`, `deprecated` ou `discontinued`.
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  current:
+                    type: integer
+                    description: Version actuelle
+                  default:
+                    type: integer
+                    description: Version par défaut
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        number:
+                          type: integer
+                          description: Numéro de version
+                        statut:
+                          type: string
+                          description: Statut de la version, peut être `disponible`, `déprécié` ou `abandonné`
+                        default:
+                          type: boolean
+                          description: Si cette version est celle par défaut
+  /token:
+    post:
+      tags: [ "Général" ]
+      summary: Génère un token
+      description: |
+        Génère un token JWT pour le compte fournit en paramètre. Le token généré sera valide
+        pendant 24h et un nouveau token devra être demandé lors de l'expiration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        400: { "$ref": "#/components/responses/Invalid" }
+        401:
+          description: Utilisateur ou mot de passe invalide
+        403:
+          description: L'utilisateur n'a pas le droit d'utiliser l'API
+    delete:
+      tags: [ "Général" ]
+      summary: Révoque un token
+      description: Révoque le token renseigné dans le corps de la requête
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
   /users:
     get:
       tags: [ "Utilisateurs" ]
@@ -66,10 +163,31 @@ paths:
                 type: array
                 items:
                   - $ref: '#/components/schemas/Utilisateur'
+        400: { "$ref": "#/components/responses/Invalid" }
         404:
           description: Aucun utilisateur dans cet intervalle
 components:
+  responses:
+    SuccessEmpty:
+      description: Succès
+    Invalid:
+      description: Contenu de la requête invalide
   schemas:
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Nom d'utilisateur
+        password:
+          type: string
+          description: Mot de passe
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Contenu du token
     Addresse:
       type: object
       properties:
