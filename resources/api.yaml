@@ -23,7 +23,7 @@ info:
     `https://api.goodfood.fr/v{numéro_de_version}`.
     Si aucun numéro de version n'est spécifié, la version par défaut sera utilisée.
 
-    ## Versions de l'API
+    ### Historique des versions
     | Version | Statut     | Défaut |
     |---------|------------|--------|
     | v1      | Disponible | Oui    |
@@ -41,7 +41,6 @@ info:
     est invalide, une réponse <span class="client-error">400 Unauthorized</span> sera envoyée.
     Dans le cas où la terminaison nécessite un rôle particulier que l'utilisateur actuel ne
     possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
-    ---
 
   version: 0.1.0
   contact:
@@ -95,7 +94,7 @@ paths:
   /token:
     post:
       tags: [ "Général" ]
-      summary: Génère un token
+      summary: Génèrer un token
       description: |
         Génère un token JWT pour le compte fournit en paramètre. Le token généré sera valide
         pendant 24h et un nouveau token devra être demandé lors de l'expiration
