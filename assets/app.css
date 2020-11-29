@@ -22,12 +22,9 @@ header {
     writing-mode: vertical-rl;
 }
 
-[data-section-id] {
-    border-bottom: 5px solid rgba(0, 0, 0, 0.3) !important;
-}
-
 [data-section-id]::after {
     border-bottom: none !important;
+    border-bottom: 5px solid rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-section-id] h1, [data-section-id] h2 {

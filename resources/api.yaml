@@ -1,6 +1,6 @@
 openapi: 3.0.0
 servers:
-  - url: https://api.goodfood.fr/v2
+  - url: https://api.goodfood.fr/v1
     description: Default server
   - url: https://api.goodfood.fr/sandbox
     description: Sandbox server
@@ -42,11 +42,61 @@ info:
     Dans le cas où la terminaison nécessite un rôle particulier que l'utilisateur actuel ne
     possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
 
+    ### Permissions
+    Les permissions avec le préfixe `is` concernent des comptes ayant le droit de gérer les
+    informations qui leur sont liées, par exemple gérer les commandes qu'il reçoit pour un
+    restaurant. Elles ne sont en général pas spécifié dans les permissions d'une terminaison.
+    Le préfixe `read` autorise à lister et voir toutes les données dans cette
+    catégorie, le préfixe `manage` permet d'éditer et dans certains cas supprimer des données
+    et le préfixe `delete` autorise la suppression lorsque `manage` ne l'autorise pas.
+
+    | Permission          | Valeur  | Description                                                |
+    |---------------------|---------|------------------------------------------------------------|
+    | `is:client`*        | 1 << 0  | Voir et éditer son compte et passer des commandes          |
+    | `is:restaurant`**   | 1 << 1  | Gestion des commandes, promotions et stock du restaurant   |
+    | `read:user`         | 1 << 2  | Lister et voir toutes les informations des utilisateurs    |
+    | `manage:user`       | 1 << 3  | Edition de comptes utilisateurs                            |
+    | `delete:user`       | 1 << 4  | Suppression de comptes utilisateurs                        |
+    | `make:order`        | 1 << 5  | Passer des commandes et voir ses commandes                 |
+    | `read:order`        | 1 << 6  | Lister et voir l'ensemble des commandes                    |
+    | `manage:order`      | 1 << 7  | Annulation de commandes                                    |
+    | `read:payment`      | 1 << 8  | Lister et voir l'ensemble des paiements                    |
+    | `manage:payment`    | 1 << 9  | Annuler des paiements                                      |
+    | `read:stock`        | 1 << 10 | Voir le stock de tous les restaurants                      |
+    | `manage:stock`      | 1 << 11 | Gérer le stock de tous les restaurants                     |
+    | `manage:restaurant` | 1 << 12 | Gérer les restaurants                                      |
+    | `read:offer`        | 1 << 13 | Voir l'ensemble des promotions                             |
+    | `manage:offer`      | 1 << 14 | Gérer les promotions                                       |
+
+    \* : La permission `is:client` permet à l'utilisateur de voir, éditer et supprimer son propre
+    compte, passer des commandes
+
+    \*\* : La permission `is:restaurant` permet à l'utilisateur d'éditer son restaurant, de voir
+    et gérer ses stocks, promotions et commandes mais aussi voir le détail des utilisateurs qui
+    passent des commandes dans le restaurant.
+
   version: 0.1.0
   contact:
     name: Support technique
     email: contact@goodfood.fr
     url: http://goodfood.fr/contact
+security:
+  - jwt_auth:
+      - is:client
+      - is:restaurant
+      - read:user
+      - manage:user
+      - delete:user
+      - make:order
+      - read:order
+      - manage:order
+      - read:payment
+      - manage:payment
+      - read:stock
+      - manage:stock
+      - manage:restaurant
+      - read:offer
+      - manage:offer
 tags:
   - name: Général
     description: Informations sur l'API et authentification
@@ -57,6 +107,7 @@ tags:
 paths:
   /version:
     get:
+      security: []
       tags: [ "Général" ]
       summary: Version de l'API
       description: |
@@ -94,6 +145,7 @@ paths:
   /token:
     post:
       tags: [ "Général" ]
+      security: []
       summary: Génèrer un token
       description: |
         Génère un token JWT pour le compte fournit en paramètre. Le token généré sera valide
@@ -111,14 +163,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Token'
-        400: { "$ref": "#/components/responses/Invalid" }
+        400: { $ref: "#/components/responses/Invalid" }
         401:
           description: Utilisateur ou mot de passe invalide
         403:
           description: L'utilisateur n'a pas le droit d'utiliser l'API
     delete:
       tags: [ "Général" ]
-      summary: Révoque un token
+      security: [{ jwt_auth: [is:client, is:restaurant] }]
+      summary: Révoquer un token
       description: Révoque le token renseigné dans le corps de la requête
       requestBody:
         required: true
@@ -133,8 +186,9 @@ paths:
   /users:
     get:
       tags: [ "Utilisateurs" ]
+      security: [{ jwt_auth: [read:user] }]
       summary: Liste des utilisateurs
-      description: Retourne uniquement les 500 premiers utilisateurs si aucun param
+      description: Par défaut les 500 premiers utilisateurs si aucun paramètre n'est renseigné
       parameters:
         - name: offset
           in: query
@@ -161,16 +215,139 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/Utilisateur'
+                  - $ref: '#/components/schemas/User'
         400: { "$ref": "#/components/responses/Invalid" }
         404:
           description: Aucun utilisateur dans cet intervalle
+    post:
+      tags: [ "Utilisateurs" ]
+      summary: Créér un utilisateur
+      security: []
+      description: |
+        Créé un compte utilisateur pouvant se connecter à l'application. Un email
+        est ensuite envoyé à l'utilisateur afin que ce dernier confirme son inscription.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: '#/components/schemas/User'
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /user/{id}:
+    get:
+      tags: [ "Utilisateurs" ]
+      security: [{ jwt_auth: [read:user] }]
+      summary: Utilisateur par id
+      parameters:
+        - name: id
+          in: path
+          description: Id de l'utilisateur
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: Aucun utilisateur ne correspond à cet id
+    patch:
+      tags: [ "Utilisateurs" ]
+      security: [{ jwt_auth: [manage:user] }]
+      summary: Modifier un utilisateur
+      description: |
+        Modifie les données de l'utilisateur
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordlessUser'
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: '#/components/schemas/User'
+        400: { "$ref": "#/components/responses/Invalid" }
+        404: { "$ref": "#/components/responses/NotFound" }
+    delete:
+      tags: [ "Utilisateurs" ]
+      security: [{ jwt_auth: [delete:user] }]
+      summary: Supprimer un utilisateur
+      description: |
+        Supprimer un utilisateur. Si c'est l'utilisateur lui même qui demande la suppression,
+        ce dernier recevra un mail pour confirmer l'action.
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        404: { "$ref": "#/components/responses/NotFound" }
+
+  /user/{email}:
+    get:
+      tags: [ "Utilisateurs" ]
+      security: [{ jwt_auth: [read:user] }]
+      summary: Utilisateur par adresse email
+      parameters:
+        - name: email
+          in: path
+          description: Adresse email de l'utilisateur
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404: { description: Aucun utilisateur ne correspond à cet email }
+
 components:
+  securitySchemes:
+    jwt_auth:
+      type: apiKey
+      name: Authentification JWT
+      in: header
+      flows:
+        implicit:
+          scopes:
+            is:client: Voir et éditer son compte et passer des commandes
+            is:restaurant: Gestion des commandes, promotions et stock du restaurant
+            read:user: Lister et voir toutes les informations des utilisateurs
+            manage:user: Edition de comptes utilisateurs
+            delete:user: Suppression de comptes utilisateurs
+            make:order: Passer des commandes et voir ses commandes
+            read:order: Lister et voir l'ensemble des commandes
+            manage:order: Annulation de commandes
+            read:payment: Lister et voir l'ensemble des paiements
+            manage:payment: Annuler des paiements
+            read:stock: Voir le stock de tous les restaurants
+            manage:stock: Gérer le stock de tous les restaurants
+            manage:restaurant: Gérer les restaurants
+            read:offer: Voir l'ensemble des promotions
+            manage:offer: Gérer les promotions
   responses:
     SuccessEmpty:
       description: Succès
     Invalid:
       description: Contenu de la requête invalide
+    NotFound:
+      description: Ressource inexistante
   schemas:
     Login:
       type: object
@@ -187,12 +364,15 @@ components:
         token:
           type: string
           description: Contenu du token
-    Addresse:
+    Id:
+      type: integer
+      format: int64
+      readOnly: true
+
+    Address:
       type: object
       properties:
-        id:
-          type: integer
-          description: Identifiant unique de l'adresse
+        id: { $ref: "#/components/schemas/Id" }
         number:
           type: integer
           description: Numéro de rue
@@ -213,15 +393,52 @@ components:
           description: Code postal
           required: true
 
-    Utilisateur:
+    BasicUser:
       type: object
       properties:
-        id:
-          type: integer
-          description: Identifiant unique de l'utilisateur.
+        id: { $ref: "#/components/schemas/Id" }
+        firstname:
+          type: string
+          description: Prénom
+        lastname:
+          type: string
+          description: Nom de famille
+
+    User:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
         email:
           type: string
-          description: Adresse mail de l'utilisateur
+          description: Adresse email de l'utilisateur
+          required: true
+        password:
+          type: string
+          description: Mot de passe de l'utilisateur
+          writeOnly: true
+          required: true
+        firstname:
+          type: string
+          description: Prénom
+        lastname:
+          type: string
+          description: Nom de famille
+        registered:
+          type: string
+          description: Date d'inscription
+        address:
+          $ref: '#/components/schemas/Address'
+        api_permissions:
+          type: integer
+          description: The permissions regarding API use
+
+    PasswordlessUser:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        email:
+          type: string
+          description: Adresse email de l'utilisateur
           required: true
         firstname:
           type: string
@@ -235,4 +452,10 @@ components:
           type: string
           description: Date d'inscription
         address:
-          $ref: '#/components/schemas/Addresse'
+          type: array
+          description: Adresses de l'utilisateur
+          items:
+            $ref: '#/components/schemas/Address'
+        api_permissions:
+          type: integer
+          description: The permissions regarding API use
