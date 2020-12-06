@@ -8,20 +8,20 @@ info:
   title: GoodFood API
   description: |
     # Introduction
-    Cette page est dédiée à la documentation de l'API REST de GoodFood. GoodFood est un réseau
+    Cette page est dédiée à la documentation de l"API REST de GoodFood. GoodFood est un réseau
     de restaurants franchisés qui proposent des prestations de restauration conventionnelle,
     de la vente à emporter et des prestations de livraison.
 
-    Si vous pensez avoir trouvé un bug au niveau de l'API ou une erreur sur la documentation
+    Si vous pensez avoir trouvé un bug au niveau de l"API ou une erreur sur la documentation
     vous pouvez le reporter sur notre
-    [outil de tracking d'issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
+    [outil de tracking d"issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
     ou nous contacter via notre adresse mail [contact@goodfood.fr](mailto:contact@goodfood.fr).
 
     # Versionnage
-    L'API de GoodFood est versionnée et plusieurs versions peuvent être disponibles. Vous pouvez
-    spécifier quelle version utiliser en l'incluant dans l'URL de la requête de la façon suivante
+    L"API de GoodFood est versionnée et plusieurs versions peuvent être disponibles. Vous pouvez
+    spécifier quelle version utiliser en l"incluant dans l"URL de la requête de la façon suivante
     `https://api.goodfood.fr/v{numéro_de_version}`.
-    Si aucun numéro de version n'est spécifié, la version par défaut sera utilisée.
+    Si aucun numéro de version n"est spécifié, la version par défaut sera utilisée.
 
     ### Historique des versions
     | Version | Statut     | Défaut |
@@ -32,22 +32,22 @@ info:
     ...
 
     # Authentification et authorisation
-    Certaines terminaisons de l'API nécessitent d'être authentifié. Pour obtenir un token
+    Certaines terminaisons de l"API nécessitent d"être authentifié. Pour obtenir un token
     il est nécessaire de contacter le support technique de GoodFood. Le token généré par le
     support devra être envoyé avec chaque requête nécessitant une authentification dans le
     header `Authorization` en type `Bearer`.
 
-    Si une terminaison nécessite d'être authentifié mais aucun token n'est fournit ou le token
+    Si une terminaison nécessite d"être authentifié mais aucun token n"est fournit ou le token
     est invalide, une réponse <span class="client-error">400 Unauthorized</span> sera envoyée.
     Dans le cas où la terminaison nécessite un rôle particulier que l'utilisateur actuel ne
     possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
 
     ### Permissions
     Les permissions avec le préfixe `is` concernent des comptes ayant le droit de gérer les
-    informations qui leur sont liées, par exemple gérer les commandes qu'il reçoit pour un
-    restaurant. Elles ne sont en général pas spécifié dans les permissions d'une terminaison.
+    informations qui leur sont liées, par exemple gérer les commandes qu"il reçoit pour un
+    restaurant. Elles ne sont en général pas spécifié dans les permissions d"une terminaison.
     Le préfixe `read` autorise à lister et voir toutes les données dans cette
-    catégorie, le préfixe `manage` permet d'éditer et dans certains cas supprimer des données
+    catégorie, le préfixe `manage` permet d"éditer et dans certains cas supprimer des données
     et le préfixe `delete` autorise la suppression lorsque `manage` ne l'autorise pas.
 
     | Permission          | Valeur  | Description                                                |
@@ -71,7 +71,7 @@ info:
     \* : La permission `is:client` permet à l'utilisateur de voir, éditer et supprimer son propre
     compte, passer des commandes
 
-    \*\* : La permission `is:restaurant` permet à l'utilisateur d'éditer son restaurant, de voir
+    \*\* : La permission `is:restaurant` permet à l'utilisateur d"éditer son restaurant, de voir
     et gérer ses stocks, promotions et commandes mais aussi voir le détail des utilisateurs qui
     passent des commandes dans le restaurant.
 
@@ -102,17 +102,19 @@ tags:
     description: Informations sur l'API et authentification
   - name: Utilisateurs
     description: Opérations sur les utilisateurs
+  - name: Restaurants
+    description: Opérations sur les restaurants
   - name: Commandes
     description: Opérations sur les commandes
 paths:
   /version:
     get:
-      security: []
+      security: [ ]
       tags: [ "Général" ]
       summary: Version de l'API
       description: |
         Récupère les informations sur la version de l'API en précisant la version par défaut, la version
-        utilisée et le statut de toutes les versions disponibles. Le statut d'une version peut avoir l'une
+        utilisée et le statut de toutes les versions disponibles. Le statut d"une version peut avoir l'une
         des valeurs suivantes : `available`, `deprecated` ou `discontinued`.
       responses:
         200:
@@ -145,7 +147,7 @@ paths:
   /token:
     post:
       tags: [ "Général" ]
-      security: []
+      security: [ ]
       summary: Génèrer un token
       description: |
         Génère un token JWT pour le compte fournit en paramètre. Le token généré sera valide
@@ -155,22 +157,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Login'
+              $ref: "#/components/schemas/Login"
       responses:
         200:
           description: Succès
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Token'
+                $ref: "#/components/schemas/Token"
         400: { $ref: "#/components/responses/Invalid" }
         401:
           description: Utilisateur ou mot de passe invalide
         403:
-          description: L'utilisateur n'a pas le droit d'utiliser l'API
+          description: l'utilisateur n"a pas le droit d"utiliser l'API
     delete:
       tags: [ "Général" ]
-      security: [{ jwt_auth: [is:client, is:restaurant] }]
+      security: [ { jwt_auth: [ is:client, is:restaurant ] } ]
       summary: Révoquer un token
       description: Révoque le token renseigné dans le corps de la requête
       requestBody:
@@ -178,17 +180,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Token'
+              $ref: "#/components/schemas/Token"
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
 
+  #
+  # USER RELATED ENDPOINTS
+  #
+
   /users:
     get:
       tags: [ "Utilisateurs" ]
-      security: [{ jwt_auth: [read:user] }]
+      security: [ { jwt_auth: [ read:user ] } ]
       summary: Liste des utilisateurs
-      description: Par défaut les 500 premiers utilisateurs si aucun paramètre n'est renseigné
+      description: Par défaut les 500 premiers utilisateurs si aucun paramètre n"est renseigné
       parameters:
         - name: offset
           in: query
@@ -200,12 +206,12 @@ paths:
           required: false
         - name: limit
           in: query
-          description: Nombre d'utilisateurs à envoyer
+          description: Nombre d"utilisateurs à envoyer
           schema:
             type: integer
             minimum: 1
-            maximum: 500
-            default: 100
+            maximum: 1000
+            default: 500
           required: false
       responses:
         200:
@@ -215,14 +221,14 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/User'
+                  - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
         404:
           description: Aucun utilisateur dans cet intervalle
     post:
       tags: [ "Utilisateurs" ]
       summary: Créér un utilisateur
-      security: []
+      security: [ ]
       description: |
         Créé un compte utilisateur pouvant se connecter à l'application. Un email
         est ensuite envoyé à l'utilisateur afin que ce dernier confirme son inscription.
@@ -230,7 +236,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: "#/components/schemas/User"
       responses:
         200:
           description: Succès
@@ -239,13 +245,13 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/User'
+                  - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
 
   /user/{id}:
     get:
       tags: [ "Utilisateurs" ]
-      security: [{ jwt_auth: [read:user] }]
+      security: [ { jwt_auth: [ read:user ] } ]
       summary: Utilisateur par id
       parameters:
         - name: id
@@ -260,12 +266,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
         404:
           description: Aucun utilisateur ne correspond à cet id
     patch:
       tags: [ "Utilisateurs" ]
-      security: [{ jwt_auth: [manage:user] }]
+      security: [ { jwt_auth: [ manage:user ] } ]
       summary: Modifier un utilisateur
       description: |
         Modifie les données de l'utilisateur
@@ -273,7 +279,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordlessUser'
+              $ref: "#/components/schemas/PasswordlessUser"
       responses:
         200:
           description: Succès
@@ -282,15 +288,15 @@ paths:
               schema:
                 type: array
                 items:
-                  - $ref: '#/components/schemas/User'
+                  - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
         404: { "$ref": "#/components/responses/NotFound" }
     delete:
       tags: [ "Utilisateurs" ]
-      security: [{ jwt_auth: [delete:user] }]
+      security: [ { jwt_auth: [ delete:user ] } ]
       summary: Supprimer un utilisateur
       description: |
-        Supprimer un utilisateur. Si c'est l'utilisateur lui même qui demande la suppression,
+        Supprimer un utilisateur. Si c"est l'utilisateur lui même qui demande la suppression,
         ce dernier recevra un mail pour confirmer l'action.
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
@@ -299,7 +305,7 @@ paths:
   /user/{email}:
     get:
       tags: [ "Utilisateurs" ]
-      security: [{ jwt_auth: [read:user] }]
+      security: [ { jwt_auth: [ read:user ] } ]
       summary: Utilisateur par adresse email
       parameters:
         - name: email
@@ -314,8 +320,240 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
         404: { description: Aucun utilisateur ne correspond à cet email }
+
+  #
+  # RESTAURANT RELATED ENDPOINTS
+  #
+
+  /restaurants:
+    get:
+      tags: [ "Restaurants" ]
+      security: [ ]
+      summary: Liste des restaurants
+      description: |
+        Liste de tous les restaurants. Renvoie les 50 premiers restaurants par défaut
+        si aucun paramètre n"est renseigné. Ne nécessite aucune permission.
+      parameters:
+        - name: offset
+          in: query
+          description: Décalage à prendre dans la liste
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          required: false
+        - name: limit
+          in: query
+          description: Nombre de restaurants à envoyer
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          required: false
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: "#/components/schemas/Restaurant"
+        400: { "$ref": "#/components/responses/Invalid" }
+        404:
+          description: Aucun restaurant dans cet intervalle
+    post:
+      tags: [ "Restaurants" ]
+      summary: Créér un restaurant
+      security: [ { jwt_auth: [ "manage:restaurant" ] } ]
+      description: |
+        Créé un restaurant.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Restaurant"
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: "#/components/schemas/User"
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /restaurant/{id}:
+    get:
+      tags: [ "Restaurants" ]
+      security: [ ]
+      summary: Restaurant par id
+      parameters:
+        - name: id
+          in: path
+          description: Id de l'utilisateur
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+        404:
+          description: Aucun utilisateur ne correspond à cet id
+    patch:
+      tags: [ "Restaurants" ]
+      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      summary: Modifier un restaurant
+      description: |
+        Modifie les données du restaurant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Restaurant"
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: "#/components/schemas/Restaurant"
+        400: { "$ref": "#/components/responses/Invalid" }
+        404: { "$ref": "#/components/responses/NotFound" }
+    delete:
+      tags: [ "Restaurants" ]
+      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      summary: Supprimer un restaurant
+      description: Supprime un restaurant
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        404: { "$ref": "#/components/responses/NotFound" }
+
+  /restaurants/{restaurant}/products:
+    post:
+      tags: [ "Restaurants" ]
+      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      summary: Ajouter un produit
+      description: Ajoute un produit au restaurant sélectionné
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /restaurants/{restaurant}/products/{product}:
+    patch:
+      tags: [ "Restaurants" ]
+      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      summary: Modifier un produit
+      description: Modifie le produit du restaurant sélectionné
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+        - name: product
+          in: path
+          description: Produit concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+        404: { "$ref": "#/components/responses/NotFound" }
+
+    delete:
+      tags: [ "Restaurants" ]
+      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      summary: Supprimer produit
+      description: Supprime le produit du restaurant sélectionné
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+        - name: product
+          in: path
+          description: Produit concerné
+          schema:
+            type: integer
+          required: true
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        404: { "$ref": "#/components/responses/NotFound" }
+
+  /restaurants/search:
+    post:
+      tags: [ "Restaurants" ]
+      security: [ ]
+      summary: Recherche de restaurant
+      description: |
+        Recherche un restaurant selon une chaine de caractère dans le titre, la description
+        ou selon sa position. Tous les paramètres à la racine de l'objet donné dans le corps
+        de la requête sont optionnels.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                  description: Recherche de nom, description...
+                location:
+                  type: object
+                  properties:
+                    latitude:
+                      type: number
+                      description: Latitude du restaurant
+                      required: true
+                    longitude:
+                      type: number
+                      description: Longitude du restaurant
+                      required: true
+                    radius:
+                      type: number
+                      description: Rayon en kilomètres autour duquel chercher
+                      required: false
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Restaurant"
 
 components:
   securitySchemes:
@@ -354,7 +592,7 @@ components:
       properties:
         username:
           type: string
-          description: Nom d'utilisateur
+          description: Nom d"utilisateur
         password:
           type: string
           description: Mot de passe
@@ -368,6 +606,16 @@ components:
       type: integer
       format: int64
       readOnly: true
+
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          description: Latitude du restaurant
+        longitude:
+          type: number
+          description: Longitude du restaurant
 
     Address:
       type: object
@@ -425,9 +673,9 @@ components:
           description: Nom de famille
         registered:
           type: string
-          description: Date d'inscription
+          description: Date d"inscription
         address:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         api_permissions:
           type: integer
           description: The permissions regarding API use
@@ -450,12 +698,59 @@ components:
           required: true
         registered:
           type: string
-          description: Date d'inscription
+          description: Date d"inscription
         address:
           type: array
           description: Adresses de l'utilisateur
           items:
-            $ref: '#/components/schemas/Address'
+            $ref: "#/components/schemas/Address"
         api_permissions:
           type: integer
           description: The permissions regarding API use
+
+    Product:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        category:
+          type: string
+          description: Type de produit
+          enum:
+            - appetizer
+            - dish
+            - dessert
+            - drink
+        name:
+          type: string
+          description: Nom du produit
+        description:
+          type: string
+          description: Description du produit
+        price:
+          type: number
+          description: Prix du produit
+
+    Restaurant:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name:
+          type: string
+          description: Adresse email de l'utilisateur
+          required: true
+        shortDescription:
+          type: string
+          description: Courte description du restaurant
+          required: true
+        description:
+          type: string
+          description: Description complète du restaurant
+          required: true
+        address:
+          $ref: "#/components/schemas/Address"
+        location:
+          $ref: "#/components/schemas/Location"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
