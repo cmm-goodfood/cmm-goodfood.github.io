@@ -99,7 +99,9 @@ security:
       - manage:offer
 tags:
   - name: Général
-    description: Informations sur l'API et authentification
+    description: Informations sur l'API
+  - name: Gestion de compte
+    description: Authentification
   - name: Utilisateurs
     description: Opérations sur les utilisateurs
   - name: Restaurants
@@ -144,9 +146,13 @@ paths:
                         default:
                           type: boolean
                           description: Si cette version est celle par défaut
+
+  #
+  # USER ACCOUNT MANAGEMENT
+  #
   /token:
     post:
-      tags: [ "Général" ]
+      tags: [ "Gestion de compte" ]
       security: [ ]
       summary: Génèrer un token
       description: |
@@ -171,7 +177,7 @@ paths:
         403:
           description: l'utilisateur n"a pas le droit d"utiliser l'API
     delete:
-      tags: [ "Général" ]
+      tags: [ "Gestion de compte" ]
       security: [ { jwt_auth: [ is:client, is:restaurant ] } ]
       summary: Révoquer un token
       description: Révoque le token renseigné dans le corps de la requête
@@ -181,6 +187,53 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Token"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /user/reset:
+    post:
+      tags: [ "Gestion de compte" ]
+      summary: Mot de passe perdu
+      security: [ ]
+      description: |
+        Engage la procédure de réinitialisation de mot de passe en envoyant un email
+        à l'utilisateur.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
+    put:
+      tags: [ "Gestion de compte" ]
+      summary: Réinitialiser le mot de passe
+      security: [ ]
+      description: |
+        Engage la procédure de réinitialisation de mot de passe en envoyant un email
+        à l'utilisateur.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Token envoyé par mail à l'utilisateur
+                  required: true
+                email:
+                  type: string
+                  required: true
+                password:
+                  type: string
+                  required: true
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
@@ -225,6 +278,7 @@ paths:
         400: { "$ref": "#/components/responses/Invalid" }
         404:
           description: Aucun utilisateur dans cet intervalle
+
     post:
       tags: [ "Utilisateurs" ]
       summary: Créér un utilisateur
@@ -269,6 +323,7 @@ paths:
                 $ref: "#/components/schemas/User"
         404:
           description: Aucun utilisateur ne correspond à cet id
+
     patch:
       tags: [ "Utilisateurs" ]
       security: [ { jwt_auth: [ manage:user ] } ]
@@ -291,6 +346,7 @@ paths:
                   - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
         404: { "$ref": "#/components/responses/NotFound" }
+
     delete:
       tags: [ "Utilisateurs" ]
       security: [ { jwt_auth: [ delete:user ] } ]
