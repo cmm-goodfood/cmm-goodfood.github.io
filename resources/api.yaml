@@ -8,20 +8,20 @@ info:
   title: GoodFood API
   description: |
     # Introduction
-    Cette page est dédiée à la documentation de l"API REST de GoodFood. GoodFood est un réseau
+    Cette page est dédiée à la documentation de l'API REST de GoodFood. GoodFood est un réseau
     de restaurants franchisés qui proposent des prestations de restauration conventionnelle,
     de la vente à emporter et des prestations de livraison.
 
-    Si vous pensez avoir trouvé un bug au niveau de l"API ou une erreur sur la documentation
+    Si vous pensez avoir trouvé un bug au niveau de l'API ou une erreur sur la documentation
     vous pouvez le reporter sur notre
-    [outil de tracking d"issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
+    [outil de tracking d'issue](https://github.com/cmm-goodfood/cmm-goodfood.github.io/issues)
     ou nous contacter via notre adresse mail [contact@goodfood.fr](mailto:contact@goodfood.fr).
 
     # Versionnage
-    L"API de GoodFood est versionnée et plusieurs versions peuvent être disponibles. Vous pouvez
-    spécifier quelle version utiliser en l"incluant dans l"URL de la requête de la façon suivante
+    L'API de GoodFood est versionnée et plusieurs versions peuvent être disponibles. Vous pouvez
+    spécifier quelle version utiliser en l'incluant dans l'URL de la requête de la façon suivante
     `https://api.goodfood.fr/v{numéro_de_version}`.
-    Si aucun numéro de version n"est spécifié, la version par défaut sera utilisée.
+    Si aucun numéro de version n'est spécifié, la version par défaut sera utilisée.
 
     ### Historique des versions
     | Version | Statut     | Défaut |
@@ -32,12 +32,12 @@ info:
     ...
 
     # Authentification et authorisation
-    Certaines terminaisons de l"API nécessitent d"être authentifié. Pour obtenir un token
+    Certaines terminaisons de l'API nécessitent d'être authentifié. Pour obtenir un token
     il est nécessaire de contacter le support technique de GoodFood. Le token généré par le
     support devra être envoyé avec chaque requête nécessitant une authentification dans le
     header `Authorization` en type `Bearer`.
 
-    Si une terminaison nécessite d"être authentifié mais aucun token n"est fournit ou le token
+    Si une terminaison nécessite d'être authentifié mais aucun token n'est fournit ou le token
     est invalide, une réponse <span class="client-error">400 Unauthorized</span> sera envoyée.
     Dans le cas où la terminaison nécessite un rôle particulier que l'utilisateur actuel ne
     possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
@@ -45,9 +45,9 @@ info:
     ### Permissions
     Les permissions avec le préfixe `is` concernent des comptes ayant le droit de gérer les
     informations qui leur sont liées, par exemple gérer les commandes qu"il reçoit pour un
-    restaurant. Elles ne sont en général pas spécifié dans les permissions d"une terminaison.
+    restaurant. Elles ne sont en général pas spécifié dans les permissions d'une terminaison.
     Le préfixe `read` autorise à lister et voir toutes les données dans cette
-    catégorie, le préfixe `manage` permet d"éditer et dans certains cas supprimer des données
+    catégorie, le préfixe `manage` permet d'éditer et dans certains cas supprimer des données
     et le préfixe `delete` autorise la suppression lorsque `manage` ne l'autorise pas.
 
     | Permission          | Valeur  | Description                                                |
@@ -71,7 +71,7 @@ info:
     \* : La permission `is:client` permet à l'utilisateur de voir, éditer et supprimer son propre
     compte, passer des commandes
 
-    \*\* : La permission `is:restaurant` permet à l'utilisateur d"éditer son restaurant, de voir
+    \*\* : La permission `is:restaurant` permet à l'utilisateur d'éditer son restaurant, de voir
     et gérer ses stocks, promotions et commandes mais aussi voir le détail des utilisateurs qui
     passent des commandes dans le restaurant.
 
@@ -95,8 +95,6 @@ security:
       - read:stock
       - manage:stock
       - manage:restaurant
-      - read:offer
-      - manage:offer
 tags:
   - name: Général
     description: Informations sur l'API
@@ -108,6 +106,8 @@ tags:
     description: Opérations sur les restaurants
   - name: Commandes
     description: Opérations sur les commandes
+  - name: Stock
+    description: Opérations sur la gestion de stock
 paths:
   /version:
     get:
@@ -116,7 +116,7 @@ paths:
       summary: Version de l'API
       description: |
         Récupère les informations sur la version de l'API en précisant la version par défaut, la version
-        utilisée et le statut de toutes les versions disponibles. Le statut d"une version peut avoir l'une
+        utilisée et le statut de toutes les versions disponibles. Le statut d'une version peut avoir l'une
         des valeurs suivantes : `available`, `deprecated` ou `discontinued`.
       responses:
         200:
@@ -175,7 +175,7 @@ paths:
         401:
           description: Utilisateur ou mot de passe invalide
         403:
-          description: l'utilisateur n"a pas le droit d"utiliser l'API
+          description: l'utilisateur n'a pas le droit d'utiliser l'API
     delete:
       tags: [ "Gestion de compte" ]
       security: [ { jwt_auth: [ is:client, is:restaurant ] } ]
@@ -216,8 +216,9 @@ paths:
       summary: Réinitialiser le mot de passe
       security: [ ]
       description: |
-        Engage la procédure de réinitialisation de mot de passe en envoyant un email
-        à l'utilisateur.
+        Finalisation de la procédure de réinitialisation de mot de passe avec
+        la saisie du nouveau mot de passe. Le nouveau mot de passe sera
+        effectif directement après l'appel API.
       requestBody:
         content:
           application/json:
@@ -247,7 +248,7 @@ paths:
       tags: [ "Utilisateurs" ]
       security: [ { jwt_auth: [ read:user ] } ]
       summary: Liste des utilisateurs
-      description: Par défaut les 500 premiers utilisateurs si aucun paramètre n"est renseigné
+      description: Par défaut les 500 premiers utilisateurs si aucun paramètre n'est renseigné
       parameters:
         - name: offset
           in: query
@@ -259,7 +260,7 @@ paths:
           required: false
         - name: limit
           in: query
-          description: Nombre d"utilisateurs à envoyer
+          description: Nombre d'utilisateurs à envoyer
           schema:
             type: integer
             minimum: 1
@@ -352,7 +353,7 @@ paths:
       security: [ { jwt_auth: [ delete:user ] } ]
       summary: Supprimer un utilisateur
       description: |
-        Supprimer un utilisateur. Si c"est l'utilisateur lui même qui demande la suppression,
+        Supprimer un utilisateur. Si c'est l'utilisateur lui même qui demande la suppression,
         ce dernier recevra un mail pour confirmer l'action.
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
@@ -390,7 +391,7 @@ paths:
       summary: Liste des restaurants
       description: |
         Liste de tous les restaurants. Renvoie les 50 premiers restaurants par défaut
-        si aucun paramètre n"est renseigné. Ne nécessite aucune permission.
+        si aucun paramètre n'est renseigné. Ne nécessite aucune permission.
       parameters:
         - name: offset
           in: query
@@ -611,6 +612,146 @@ paths:
                 items:
                   $ref: "#/components/schemas/Restaurant"
 
+  #
+  # ORDERS RELATED ENDPOINTS
+  #
+
+  /order/{restaurant}:
+    get:
+      tags: [ "Commandes" ]
+      security: [ { jwt_auth: [ read:order ] } ]
+      summary: Liste des commandes
+      description: Récupère la liste des commandes dans un restaurant
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Order"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+    post:
+      tags: [ "Commandes" ]
+      security: [ { jwt_auth: [] } ]
+      summary: Création d'une commande
+      description: Création d'une commande par un utilisateur
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Product"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /order/{number}:
+    get:
+      tags: [ "Commandes" ]
+      security: [ { jwt_auth: [ read:order ] } ]
+      summary: Détails d'une commande
+      description: Récupère la liste des commandes dans un restaurant
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Order"
+      responses:
+        200:
+          description: Numéro de commande
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  number:
+                    type: string
+                    description: Numéro de la commande créée
+        400: { "$ref": "#/components/responses/Invalid" }
+  #
+  # STOCK RELATED ENDPOINTS
+  #
+
+  /stock/{restaurant}:
+    get:
+      tags: [ "Stock" ]
+      security: [ { jwt_auth: [ read:stock ] } ]
+      summary: Liste du stock
+      description: Récupère le stock d'un restaurant
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Product"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+    post:
+      tags: [ "Stock" ]
+      security: [ { jwt_auth: [ read:stock ] } ]
+      summary: Mise à jour du stock
+      description: Mise à jour de la quantité d'un ou plusieurs produits dans le stock
+      parameters:
+        - name: restaurant
+          in: path
+          description: Restaurant concerné
+          schema:
+            type: integer
+          required: true
+        - name: updated_products
+          in: body
+          description: Produits à mettre à jour
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Product"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Product"
+      responses:
+        200: { "$ref": "#/components/responses/SuccessEmpty" }
+        400: { "$ref": "#/components/responses/Invalid" }
+
 components:
   securitySchemes:
     jwt_auth:
@@ -648,7 +789,7 @@ components:
       properties:
         username:
           type: string
-          description: Nom d"utilisateur
+          description: Nom d'utilisateur
         password:
           type: string
           description: Mot de passe
@@ -729,12 +870,12 @@ components:
           description: Nom de famille
         registered:
           type: string
-          description: Date d"inscription
+          description: Date d'inscription
         address:
           $ref: "#/components/schemas/Address"
         api_permissions:
           type: integer
-          description: The permissions regarding API use
+          description: PErmissions d'utilisation de l'API
 
     PasswordlessUser:
       type: object
@@ -754,7 +895,7 @@ components:
           required: true
         registered:
           type: string
-          description: Date d"inscription
+          description: Date d'inscription
         address:
           type: array
           description: Adresses de l'utilisateur
@@ -785,6 +926,24 @@ components:
         price:
           type: number
           description: Prix du produit
+        quantity:
+          type: integer
+          description: Quantité en stock
+
+    Order:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        restaurant:
+          $ref: "#/components/schemas/Restaurant"
+          readOnly: true
+        user:
+          $ref: "#/components/schemas/User"
+        time:
+          type: string
+          description: Heure de la commande
+        address:
+          $ref: "#/components/schemas/Address"
 
     Restaurant:
       type: object
@@ -806,6 +965,9 @@ components:
           $ref: "#/components/schemas/Address"
         location:
           $ref: "#/components/schemas/Location"
+        delivery_radius:
+          type: integer
+          required: true
         products:
           type: array
           items:
