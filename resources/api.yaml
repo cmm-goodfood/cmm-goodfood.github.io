@@ -28,9 +28,6 @@ info:
     |---------|------------|--------|
     | v1      | Disponible | Oui    |
 
-    # Rate limiting
-    ...
-
     # Authentification et authorisation
     Certaines terminaisons de l'API nécessitent d'être authentifié. Pour obtenir un token
     il est nécessaire de contacter le support technique de GoodFood. Le token généré par le
