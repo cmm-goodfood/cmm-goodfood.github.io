@@ -40,37 +40,13 @@ info:
     possède pas, le client recevra une erreur <span class="client-error">403 Forbidden</span>.
 
     ### Permissions
-    Les permissions avec le préfixe `is` concernent des comptes ayant le droit de gérer les
-    informations qui leur sont liées, par exemple gérer les commandes qu"il reçoit pour un
-    restaurant. Elles ne sont en général pas spécifié dans les permissions d'une terminaison.
-    Le préfixe `read` autorise à lister et voir toutes les données dans cette
-    catégorie, le préfixe `manage` permet d'éditer et dans certains cas supprimer des données
-    et le préfixe `delete` autorise la suppression lorsque `manage` ne l'autorise pas.
+    Les permissions sont gérées par des roles, il y en a trois :
 
-    | Permission          | Valeur  | Description                                                |
-    |---------------------|---------|------------------------------------------------------------|
-    | `is:client`*        | 1 << 0  | Voir et éditer son compte et passer des commandes          |
-    | `is:restaurant`**   | 1 << 1  | Gestion des commandes, promotions et stock du restaurant   |
-    | `read:user`         | 1 << 2  | Lister et voir toutes les informations des utilisateurs    |
-    | `manage:user`       | 1 << 3  | Edition de comptes utilisateurs                            |
-    | `delete:user`       | 1 << 4  | Suppression de comptes utilisateurs                        |
-    | `make:order`        | 1 << 5  | Passer des commandes et voir ses commandes                 |
-    | `read:order`        | 1 << 6  | Lister et voir l'ensemble des commandes                    |
-    | `manage:order`      | 1 << 7  | Annulation de commandes                                    |
-    | `read:payment`      | 1 << 8  | Lister et voir l'ensemble des paiements                    |
-    | `manage:payment`    | 1 << 9  | Annuler des paiements                                      |
-    | `read:stock`        | 1 << 10 | Voir le stock de tous les restaurants                      |
-    | `manage:stock`      | 1 << 11 | Gérer le stock de tous les restaurants                     |
-    | `manage:restaurant` | 1 << 12 | Gérer les restaurants                                      |
-    | `read:offer`        | 1 << 13 | Voir l'ensemble des promotions                             |
-    | `manage:offer`      | 1 << 14 | Gérer les promotions                                       |
-
-    \* : La permission `is:client` permet à l'utilisateur de voir, éditer et supprimer son propre
-    compte, passer des commandes
-
-    \*\* : La permission `is:restaurant` permet à l'utilisateur d'éditer son restaurant, de voir
-    et gérer ses stocks, promotions et commandes mais aussi voir le détail des utilisateurs qui
-    passent des commandes dans le restaurant.
+    | Roles       | Description                                              |
+    |-------------|----------------------------------------------------------|
+    | Client      | Voir et éditer son compte et passer des commandes        |
+    | Restaurant  | Gestion des commandes, promotions et stock du restaurant |
+    | Modérateur  | Gestion des utilisateurs et restaurants                  |
 
   version: 0.1.0
   contact:
@@ -79,19 +55,9 @@ info:
     url: http://goodfood.fr/contact
 security:
   - jwt_auth:
-      - is:client
-      - is:restaurant
-      - read:user
-      - manage:user
-      - delete:user
-      - make:order
-      - read:order
-      - manage:order
-      - read:payment
-      - manage:payment
-      - read:stock
-      - manage:stock
-      - manage:restaurant
+      - client
+      - restaurant
+      - moderator
 tags:
   - name: Général
     description: Informations sur l'API
@@ -115,6 +81,9 @@ paths:
         Récupère les informations sur la version de l'API en précisant la version par défaut, la version
         utilisée et le statut de toutes les versions disponibles. Le statut d'une version peut avoir l'une
         des valeurs suivantes : `available`, `deprecated` ou `discontinued`.
+      servers:
+        - url: https://api.goodfood.fr/v1
+          description: Default server
       responses:
         200:
           description: Succès
@@ -137,7 +106,7 @@ paths:
                         number:
                           type: integer
                           description: Numéro de version
-                        statut:
+                        status:
                           type: string
                           description: Statut de la version, peut être `disponible`, `déprécié` ou `abandonné`
                         default:
@@ -175,7 +144,7 @@ paths:
           description: l'utilisateur n'a pas le droit d'utiliser l'API
     delete:
       tags: [ "Gestion de compte" ]
-      security: [ { jwt_auth: [ is:client, is:restaurant ] } ]
+      security: [ { jwt_auth: [ client, restaurant, moderator ] } ]
       summary: Révoquer un token
       description: Révoque le token renseigné dans le corps de la requête
       requestBody:
@@ -243,7 +212,7 @@ paths:
   /users:
     get:
       tags: [ "Utilisateurs" ]
-      security: [ { jwt_auth: [ read:user ] } ]
+      security: [ { jwt_auth: [ moderator ] } ]
       summary: Liste des utilisateurs
       description: Par défaut les 500 premiers utilisateurs si aucun paramètre n'est renseigné
       parameters:
@@ -303,7 +272,7 @@ paths:
   /user/{id}:
     get:
       tags: [ "Utilisateurs" ]
-      security: [ { jwt_auth: [ read:user ] } ]
+      security: [ { jwt_auth: [ client, restaurant, moderator ] } ]
       summary: Utilisateur par id
       parameters:
         - name: id
@@ -324,7 +293,7 @@ paths:
 
     patch:
       tags: [ "Utilisateurs" ]
-      security: [ { jwt_auth: [ manage:user ] } ]
+      security: [ { jwt_auth: [ client, moderator ] } ]
       summary: Modifier un utilisateur
       description: |
         Modifie les données de l'utilisateur
@@ -347,7 +316,7 @@ paths:
 
     delete:
       tags: [ "Utilisateurs" ]
-      security: [ { jwt_auth: [ delete:user ] } ]
+      security: [ { jwt_auth: [ moderator ] } ]
       summary: Supprimer un utilisateur
       description: |
         Supprimer un utilisateur. Si c'est l'utilisateur lui même qui demande la suppression,
@@ -356,14 +325,14 @@ paths:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         404: { "$ref": "#/components/responses/NotFound" }
 
-  /user/{email}:
+  /user:
     get:
       tags: [ "Utilisateurs" ]
-      security: [ { jwt_auth: [ read:user ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Utilisateur par adresse email
       parameters:
         - name: email
-          in: path
+          in: query
           description: Adresse email de l'utilisateur
           schema:
             type: string
@@ -422,7 +391,7 @@ paths:
     post:
       tags: [ "Restaurants" ]
       summary: Créér un restaurant
-      security: [ { jwt_auth: [ "manage:restaurant" ] } ]
+      security: [ { jwt_auth: [ moderator ] } ]
       description: |
         Créé un restaurant.
       requestBody:
@@ -464,7 +433,7 @@ paths:
           description: Aucun utilisateur ne correspond à cet id
     patch:
       tags: [ "Restaurants" ]
-      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Modifier un restaurant
       description: |
         Modifie les données du restaurant
@@ -486,7 +455,7 @@ paths:
         404: { "$ref": "#/components/responses/NotFound" }
     delete:
       tags: [ "Restaurants" ]
-      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      security: [ { jwt_auth: [ moderator ] } ]
       summary: Supprimer un restaurant
       description: Supprime un restaurant
       responses:
@@ -496,7 +465,7 @@ paths:
   /restaurants/{restaurant}/products:
     post:
       tags: [ "Restaurants" ]
-      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Ajouter un produit
       description: Ajoute un produit au restaurant sélectionné
       parameters:
@@ -518,7 +487,7 @@ paths:
   /restaurants/{restaurant}/products/{product}:
     patch:
       tags: [ "Restaurants" ]
-      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Modifier un produit
       description: Modifie le produit du restaurant sélectionné
       parameters:
@@ -546,7 +515,7 @@ paths:
 
     delete:
       tags: [ "Restaurants" ]
-      security: [ { jwt_auth: [ manage:restaurant ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Supprimer produit
       description: Supprime le produit du restaurant sélectionné
       parameters:
@@ -595,10 +564,10 @@ paths:
                       type: number
                       description: Longitude du restaurant
                       required: true
-                    radius:
-                      type: number
-                      description: Rayon en kilomètres autour duquel chercher
-                      required: false
+                radius:
+                  type: number
+                  description: Rayon en kilomètres autour duquel chercher
+                  required: false
       responses:
         200:
           description: Succès
@@ -613,10 +582,10 @@ paths:
   # ORDERS RELATED ENDPOINTS
   #
 
-  /order/{restaurant}:
+  /orders/{restaurant}:
     get:
       tags: [ "Commandes" ]
-      security: [ { jwt_auth: [ read:order ] } ]
+      security: [ { jwt_auth: [ restaurant, moderator ] } ]
       summary: Liste des commandes
       description: Récupère la liste des commandes dans un restaurant
       parameters:
@@ -626,19 +595,29 @@ paths:
           schema:
             type: integer
           required: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/Order"
+        - name: offset
+          in: query
+          description: Décalage à prendre dans la liste
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          required: false
+        - name: limit
+          in: query
+          description: Nombre de commandes à envoyer
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 500
+          required: false
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
     post:
       tags: [ "Commandes" ]
-      security: [ { jwt_auth: [] } ]
+      security: [ { jwt_auth: [ client ] } ]
       summary: Création d'une commande
       description: Création d'une commande par un utilisateur
       parameters:
@@ -652,9 +631,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/Product"
+              $ref: "#/components/schemas/CreateOrder"
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
@@ -662,13 +639,13 @@ paths:
   /order/{number}:
     get:
       tags: [ "Commandes" ]
-      security: [ { jwt_auth: [ read:order ] } ]
+      security: [ { jwt_auth: [ client, restaurant ] } ]
       summary: Détails d'une commande
-      description: Récupère la liste des commandes dans un restaurant
+      description: Récupère le détail d'une commande
       parameters:
-        - name: restaurant
+        - name: number
           in: path
-          description: Restaurant concerné
+          description: Numéro de commande
           schema:
             type: integer
           required: true
@@ -676,9 +653,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/Order"
+              $ref: "#/components/schemas/Order"
       responses:
         200:
           description: Numéro de commande
@@ -691,60 +666,23 @@ paths:
                     type: string
                     description: Numéro de la commande créée
         400: { "$ref": "#/components/responses/Invalid" }
-  #
-  # STOCK RELATED ENDPOINTS
-  #
-
-  /stock/{restaurant}:
-    get:
-      tags: [ "Stock" ]
-      security: [ { jwt_auth: [ read:stock ] } ]
-      summary: Liste du stock
-      description: Récupère le stock d'un restaurant
-      parameters:
-        - name: restaurant
-          in: path
-          description: Restaurant concerné
-          schema:
-            type: integer
-          required: true
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/Product"
-      responses:
-        200: { "$ref": "#/components/responses/SuccessEmpty" }
-        400: { "$ref": "#/components/responses/Invalid" }
     post:
-      tags: [ "Stock" ]
-      security: [ { jwt_auth: [ read:stock ] } ]
-      summary: Mise à jour du stock
-      description: Mise à jour de la quantité d'un ou plusieurs produits dans le stock
+      tags: [ "Commandes" ]
+      security: [ { jwt_auth: [ client ] } ]
+      summary: Modification d'une commande
+      description: Modification du contenu et du status d'une commande
       parameters:
-        - name: restaurant
+        - name: number
           in: path
-          description: Restaurant concerné
+          description: Numéro de commande
           schema:
             type: integer
-          required: true
-        - name: updated_products
-          in: body
-          description: Produits à mettre à jour
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/Product"
           required: true
       requestBody:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/Product"
+              $ref: "#/components/schemas/EditOrder"
       responses:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
@@ -758,21 +696,9 @@ components:
       flows:
         implicit:
           scopes:
-            is:client: Voir et éditer son compte et passer des commandes
-            is:restaurant: Gestion des commandes, promotions et stock du restaurant
-            read:user: Lister et voir toutes les informations des utilisateurs
-            manage:user: Edition de comptes utilisateurs
-            delete:user: Suppression de comptes utilisateurs
-            make:order: Passer des commandes et voir ses commandes
-            read:order: Lister et voir l'ensemble des commandes
-            manage:order: Annulation de commandes
-            read:payment: Lister et voir l'ensemble des paiements
-            manage:payment: Annuler des paiements
-            read:stock: Voir le stock de tous les restaurants
-            manage:stock: Gérer le stock de tous les restaurants
-            manage:restaurant: Gérer les restaurants
-            read:offer: Voir l'ensemble des promotions
-            manage:offer: Gérer les promotions
+            client: Voir et éditer son compte et passer des commandes
+            restaurant: Gestion des commandes, promotions et stock du restaurant
+            moderator: Gestion des utilisateurs et restaurants
   responses:
     SuccessEmpty:
       description: Succès
@@ -784,9 +710,9 @@ components:
     Login:
       type: object
       properties:
-        username:
+        email:
           type: string
-          description: Nom d'utilisateur
+          description: Adresse email
         password:
           type: string
           description: Mot de passe
@@ -819,11 +745,11 @@ components:
           type: integer
           description: Numéro de rue
           required: true
-        street1:
+        street:
           type: string
           description: Rue (première ligne)
           required: true
-        street2:
+        addition:
           type: string
           description: Rue (seconde ligne)
         city:
@@ -865,14 +791,8 @@ components:
         lastname:
           type: string
           description: Nom de famille
-        registered:
-          type: string
-          description: Date d'inscription
         address:
           $ref: "#/components/schemas/Address"
-        api_permissions:
-          type: integer
-          description: PErmissions d'utilisation de l'API
 
     PasswordlessUser:
       type: object
@@ -890,17 +810,8 @@ components:
           type: string
           description: Nom de famille
           required: true
-        registered:
-          type: string
-          description: Date d'inscription
         address:
-          type: array
-          description: Adresses de l'utilisateur
-          items:
-            $ref: "#/components/schemas/Address"
-        api_permissions:
-          type: integer
-          description: The permissions regarding API use
+          $ref: "#/components/schemas/Address"
 
     Product:
       type: object
@@ -933,7 +844,6 @@ components:
         id: { $ref: "#/components/schemas/Id" }
         restaurant:
           $ref: "#/components/schemas/Restaurant"
-          readOnly: true
         user:
           $ref: "#/components/schemas/User"
         time:
@@ -941,6 +851,37 @@ components:
           description: Heure de la commande
         address:
           $ref: "#/components/schemas/Address"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+
+    CreateOrder:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        type:
+          type: string
+          description: Type de commande (sur place ou à emporter)
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+
+    EditOrder:
+      type: object
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        type:
+          type: string
+          description: Type de commande (`eatin`, `takeaway`)
+        status:
+          type: string
+          description: Status de la commande (`preparing`, `delivering`, `delivered`)
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
 
     Restaurant:
       type: object
@@ -962,10 +903,12 @@ components:
           $ref: "#/components/schemas/Address"
         location:
           $ref: "#/components/schemas/Location"
-        delivery_radius:
+        deliveryRadius:
           type: integer
+          description: Rayon de livraison en kilomètres
           required: true
         products:
           type: array
+          readOnly: true
           items:
             $ref: "#/components/schemas/Product"
