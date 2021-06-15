@@ -157,7 +157,7 @@ paths:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
 
-  /user/reset:
+  /users/reset:
     post:
       tags: [ "Gestion de compte" ]
       summary: Mot de passe perdu
@@ -269,7 +269,7 @@ paths:
                   - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
 
-  /user/{id}:
+  /users/{id}:
     get:
       tags: [ "Utilisateurs" ]
       security: [ { jwt_auth: [ client, restaurant, moderator ] } ]
@@ -325,7 +325,7 @@ paths:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         404: { "$ref": "#/components/responses/NotFound" }
 
-  /user:
+  /users/search:
     get:
       tags: [ "Utilisateurs" ]
       security: [ { jwt_auth: [ restaurant, moderator ] } ]
@@ -410,7 +410,7 @@ paths:
                   - $ref: "#/components/schemas/User"
         400: { "$ref": "#/components/responses/Invalid" }
 
-  /restaurant/{id}:
+  /restaurants/{id}:
     get:
       tags: [ "Restaurants" ]
       security: [ ]
@@ -636,7 +636,7 @@ paths:
         200: { "$ref": "#/components/responses/SuccessEmpty" }
         400: { "$ref": "#/components/responses/Invalid" }
 
-  /order/{number}:
+  /orders/{number}:
     get:
       tags: [ "Commandes" ]
       security: [ { jwt_auth: [ client, restaurant ] } ]
@@ -666,7 +666,7 @@ paths:
                     type: string
                     description: Numéro de la commande créée
         400: { "$ref": "#/components/responses/Invalid" }
-    post:
+    patch:
       tags: [ "Commandes" ]
       security: [ { jwt_auth: [ client ] } ]
       summary: Modification d'une commande
@@ -859,7 +859,6 @@ components:
     CreateOrder:
       type: object
       properties:
-        id: { $ref: "#/components/schemas/Id" }
         type:
           type: string
           description: Type de commande (sur place ou à emporter)
@@ -871,13 +870,12 @@ components:
     EditOrder:
       type: object
       properties:
-        id: { $ref: "#/components/schemas/Id" }
         type:
           type: string
-          description: Type de commande (`eatin`, `takeaway`)
+          description: Type de commande (`EAT_IN`, `TAKEAWAY`)
         status:
           type: string
-          description: Status de la commande (`preparing`, `delivering`, `delivered`)
+          description: Status de la commande (`PREPARING`, `DELIVERING`, `DELIVERED`)
         products:
           type: array
           items:
