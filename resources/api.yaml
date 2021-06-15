@@ -582,7 +582,7 @@ paths:
   # ORDERS RELATED ENDPOINTS
   #
 
-  /orders/{restaurant}:
+  /restaurant/{restaurant}/orders:
     get:
       tags: [ "Commandes" ]
       security: [ { jwt_auth: [ restaurant, moderator ] } ]
@@ -821,10 +821,10 @@ components:
           type: string
           description: Type de produit
           enum:
-            - appetizer
-            - dish
-            - dessert
-            - drink
+            - APPETIZER
+            - DISH
+            - DESERT
+            - DRINK
         name:
           type: string
           description: Nom du produit
@@ -861,7 +861,10 @@ components:
       properties:
         type:
           type: string
-          description: Type de commande (sur place ou à emporter)
+          description: Type de commande
+          enum:
+            - EAT_IN
+            - TAKEAWAY
         products:
           type: array
           items:
@@ -872,10 +875,18 @@ components:
       properties:
         type:
           type: string
-          description: Type de commande (`EAT_IN`, `TAKEAWAY`)
+          description: Type de commande
+          enum:
+            - EAT_IN
+            - TAKEAWAY
         status:
           type: string
-          description: Status de la commande (`PREPARING`, `DELIVERING`, `DELIVERED`)
+          description: Status de la commande
+          enum:
+            - PREPARING
+            - DELIVERING
+            - DELIVERED
+            - CANCELLED
         products:
           type: array
           items:
