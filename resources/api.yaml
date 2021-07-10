@@ -257,7 +257,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/PasswordlessUser"
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  - $ref: "#/components/schemas/PasswordlessUser"
+        400: { "$ref": "#/components/responses/Invalid" }
+
+  /users/confirm:
+    post:
+      tags: [ "Utilisateurs" ]
+      summary: Définir le mot de passe
+      security: [ ]
+      description: |
+        Définit le mot de passe d'un compte utilisateur
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordlessUser"
       responses:
         200:
           description: Succès
@@ -812,6 +835,22 @@ components:
           required: true
         address:
           $ref: "#/components/schemas/Address"
+
+    SetPassword:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Adresse email de l'utilisateur
+          required: true
+        token:
+          type: string
+          description: Token de création de compte
+          required: true
+        password:
+          type: string
+          description: Mot de passe
+          required: true
 
     Product:
       type: object
