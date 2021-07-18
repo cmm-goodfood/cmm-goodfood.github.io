@@ -873,7 +873,7 @@ components:
         price:
           type: number
           description: Prix du produit
-        quantity:
+        stock:
           type: integer
           description: Quantité en stock
 
@@ -902,7 +902,7 @@ components:
           type: string
           description: Type de commande
           enum:
-            - EAT_IN
+            - DELIVER
             - TAKEAWAY
         products:
           type: array
@@ -916,14 +916,16 @@ components:
           type: string
           description: Type de commande
           enum:
-            - EAT_IN
+            - DELIVER
             - TAKEAWAY
         status:
           type: string
           description: Status de la commande
           enum:
             - PREPARING
+            - PREPARED
             - DELIVERING
+            - TAKEN
             - DELIVERED
             - CANCELLED
         products:
